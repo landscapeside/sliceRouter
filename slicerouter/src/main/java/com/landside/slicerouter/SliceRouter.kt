@@ -182,7 +182,7 @@ class SliceRouter : FileProvider() {
     return this
   }
 
-  fun push(
+  fun pushAction(
     action: String,
     uri: Uri? = null,
     assembleParams: () -> Bundle = { Bundle() },
