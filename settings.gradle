@@ -1,2 +1,2 @@
 rootProject.name='SliceRouter'
-include ':app'
+include ':app', ':slicerouter-annotation', ':slicerouter', ':slicerouter-compiler'

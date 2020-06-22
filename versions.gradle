@@ -1,0 +1,32 @@
+ext {
+
+    /**
+     * project version conf
+     * */
+    versionMajor = 1
+    versionMinor = 0
+    versionBuild = 0
+    versionPack = 1
+
+    compileSdkVersion = 29
+    buildToolsVersion = "29.0.2"
+    SupportVersion = "29.0.0"
+    minSdkVersion = 21
+    targetSdkVersion = 29
+
+    multidex = 'com.android.support:multidex:1.0.3'
+    junit = 'junit:junit:4.12'
+    testRunner = 'com.android.support.test:runner:1.0.2'
+    espresso = 'com.android.support.test.espresso:espresso-core:3.0.2'
+
+    androidxVersion = '1.0.0'
+    androidxSupport = 'androidx.appcompat:appcompat:1.1.0'
+    appcompatV7 = "com.android.support:appcompat-v7:${SupportVersion}"
+    supportV4 = "com.android.support:support-v4:${SupportVersion}"
+    lifecycleKtx = "androidx.lifecycle:lifecycle-runtime-ktx:2.2.0"
+
+    liveData = [group: 'androidx.lifecycle', name: 'lifecycle-livedata', version: '2.0.0']
+
+    rxRouter = 'zlc.season:rxrouter:1.0.1'
+    rxRouterCompiler = 'zlc.season:rxrouter-compiler:1.0.1'
+}
