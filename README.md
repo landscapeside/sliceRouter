@@ -1,5 +1,15 @@
 [![](https://www.jitpack.io/v/landscapeside/sliceRouter.svg)](https://www.jitpack.io/#landscapeside/sliceRouter)
 
+面向切面的路由库，特性：
+
+* 支持跨级返回
+* 回调方式处理结果，摒弃安卓本身onActivityResult逻辑分离弊端
+* 支持跳转熔断
+* 支持重定向
+* 支持参数hook
+* 支持目标页面生命周期hook
+* 支持url方式跳转（可做轻量级组件化）
+
 引入：
 
 ```groovy
