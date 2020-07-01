@@ -41,7 +41,6 @@ import static javax.lang.model.element.Modifier.STATIC;
 @AutoService(Processor.class)
 public class AnnotationProcess extends AbstractProcessor {
     private String TAG = "SliceRouter: ";
-
     private Messager messager;
     private Elements elementUtils;
     private Filer filer;

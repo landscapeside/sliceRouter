@@ -19,3 +19,10 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+
+-keep class com.landside.slicerouter.** { *; }
+-keep interface com.landside.slicerouter.** { *; }
+-keep interface com.landside.slicerouter_annotation.** { *; }
+-keep @com.landside.slicerouter_annotation.Router class * {*;}
+-keep @com.landside.slicerouter_annotation.Url class * {*;}
+-keep class **.**SliceProvider {*;}
