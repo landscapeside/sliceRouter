@@ -2,5 +2,5 @@
 <paths>
     <external-cache-path
         name="cache_path"
-        path="tmp/" />
+        path="SliceTmp/" />
 </paths>
