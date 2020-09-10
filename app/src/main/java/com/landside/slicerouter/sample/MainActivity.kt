@@ -2,6 +2,8 @@ package com.landside.slicerouter.sample
 
 import android.content.Intent
 import android.os.Bundle
+import android.os.Handler
+import android.os.Message
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.landside.slicerouter.SliceDecorator
@@ -9,6 +11,13 @@ import com.landside.slicerouter.SliceRouter
 import kotlinx.android.synthetic.main.activity_main.to_second
 
 class MainActivity : AppCompatActivity() {
+
+    val handler = object :Handler(){
+        override fun handleMessage(msg: Message) {
+            super.handleMessage(msg)
+            startActivity(Intent(this@MainActivity,SecondActivity::class.java))
+        }
+    }
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
@@ -38,6 +47,8 @@ class MainActivity : AppCompatActivity() {
                 .show()
           }
     }
+
+      handler.sendEmptyMessageDelayed(1,3000)
   }
 
   override fun onBackPressed() {

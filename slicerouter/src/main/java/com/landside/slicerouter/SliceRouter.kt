@@ -37,25 +37,37 @@ class SliceRouter : FileProvider() {
       app.registerActivityLifecycleCallbacks(object : ActivityLifecycleCallbacks {
         override fun onActivityPaused(activity: Activity?) {
           activity?.javaClass?.let {
-            clsPointExecutions[it]?.apply { pauseInvoker(activity) }
+            clsPointExecutions[it]?.apply {
+              pauseInvoker(activity)
+              pauseInvoker = {}
+            }
           }
         }
 
         override fun onActivityResumed(activity: Activity?) {
           activity?.javaClass?.let {
-            clsPointExecutions[it]?.apply { resumeInvoker(activity) }
+            clsPointExecutions[it]?.apply {
+              resumeInvoker(activity)
+              resumeInvoker = {}
+            }
           }
         }
 
         override fun onActivityStarted(activity: Activity?) {
           activity?.javaClass?.let {
-            clsPointExecutions[it]?.apply { startInvoker(activity) }
+            clsPointExecutions[it]?.apply {
+              startInvoker(activity)
+              startInvoker = {}
+            }
           }
         }
 
         override fun onActivityDestroyed(activity: Activity?) {
           activity?.javaClass?.let {
-            clsPointExecutions[it]?.apply { destroyInvoker(activity) }
+            clsPointExecutions[it]?.apply {
+              destroyInvoker(activity)
+              destroyInvoker = {}
+            }
           }
           activity?.let {
             activities.remove(it)
@@ -75,13 +87,17 @@ class SliceRouter : FileProvider() {
                   activity,
                   outState
               )
+              saveInstanceStateInvoker = { _, _ -> }
             }
           }
         }
 
         override fun onActivityStopped(activity: Activity?) {
           activity?.javaClass?.let {
-            clsPointExecutions[it]?.apply { stopInvoker(activity) }
+            clsPointExecutions[it]?.apply {
+              stopInvoker(activity)
+              stopInvoker = {}
+            }
           }
         }
 
@@ -90,7 +106,10 @@ class SliceRouter : FileProvider() {
           savedInstanceState: Bundle?
         ) {
           activity?.javaClass?.let {
-            clsPointExecutions[it]?.apply { createInvoker(activity) }
+            clsPointExecutions[it]?.apply {
+              createInvoker(activity)
+              createInvoker = {}
+            }
           }
           activity?.let {
             activities.add(it)
