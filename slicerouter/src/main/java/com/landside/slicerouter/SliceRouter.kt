@@ -3,6 +3,7 @@ package com.landside.slicerouter
 import android.app.Activity
 import android.app.Application
 import android.app.Application.ActivityLifecycleCallbacks
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
@@ -21,6 +22,7 @@ class SliceRouter : FileProvider() {
 
   private var activity: FragmentActivity? = null
   private var fragment: Fragment? = null
+  private var appContext:Context? = null
   private val decorators = arrayListOf<SliceDecorator>()
   private var inheritGlobalDecorator: Boolean = true
 
@@ -70,7 +72,9 @@ class SliceRouter : FileProvider() {
             }
           }
           activity?.let {
-            activities.remove(it)
+            synchronized(activities) {
+              activities.remove(it)
+            }
             clsResolveDataMap.remove(it.javaClass)
             clsRejectDataMap.remove(it.javaClass)
             clsPointExecutions.remove(it.javaClass)
@@ -84,8 +88,8 @@ class SliceRouter : FileProvider() {
           activity?.javaClass?.let {
             clsPointExecutions[it]?.apply {
               saveInstanceStateInvoker(
-                  activity,
-                  outState
+                activity,
+                outState
               )
               saveInstanceStateInvoker = { _, _ -> }
             }
@@ -112,7 +116,9 @@ class SliceRouter : FileProvider() {
             }
           }
           activity?.let {
-            activities.add(it)
+            synchronized(activities) {
+              activities.add(it)
+            }
             clsResolveDataMap[it.javaClass] = hashMapOf()
             clsRejectDataMap[it.javaClass] = hashMapOf()
           }
@@ -133,6 +139,12 @@ class SliceRouter : FileProvider() {
       return sliceRouter
     }
 
+    fun of(context: Context):SliceRouter{
+      val sliceRouter = SliceRouter()
+      sliceRouter.appContext = context
+      return sliceRouter
+    }
+
     fun addDecorator(vararg decorators: SliceDecorator) {
       globalDecorators.addAll(decorators)
     }
@@ -140,9 +152,9 @@ class SliceRouter : FileProvider() {
 
   override fun onCreate(): Boolean {
     ApplicationUtil.getApplication(context)
-        ?.apply {
-          install(this)
-        }
+      ?.apply {
+        install(this)
+      }
     return super.onCreate()
   }
 
@@ -152,7 +164,7 @@ class SliceRouter : FileProvider() {
   ) {
     finishAndDispatch(step) { targetClz, destClz ->
       clsResolveDataMap[targetClz]?.get(destClz)
-          ?.postValue(resultGenerator())
+        ?.postValue(resultGenerator())
     }
   }
 
@@ -162,7 +174,7 @@ class SliceRouter : FileProvider() {
   ) {
     finishAndDispatch(step) { targetClz, destClz ->
       clsRejectDataMap[targetClz]?.get(destClz)
-          ?.postValue(throwable)
+        ?.postValue(throwable)
     }
   }
 
@@ -170,25 +182,50 @@ class SliceRouter : FileProvider() {
     step: Int,
     resultDispatch: (Class<*>, Class<*>) -> Unit
   ) {
-    var _step = step
-    if (activities.size - step - 1 < 0) {
-      if (activities.size == 1) {
-        finishActivities(1)
+    synchronized(activities) {
+      var _step = step
+      if (_step == 0) {
         return
       }
-      _step = activities.size - 1
+      val _currentIdx = currentPageIdx()
+      if (_currentIdx == -1) {
+        return
+      }
+      if (_currentIdx - step < 0) {
+        if (activities.size == 1) {
+          finishActivities(1)
+          return
+        }
+        _step = _currentIdx
+      }
+      val targetClz = activities[_currentIdx - step].javaClass
+      val destClz = activities[_currentIdx - step + 1].javaClass
+      finishActivities(_step)
+      resultDispatch(targetClz, destClz)
     }
-    val targetClz = activities[activities.size - _step - 1].javaClass
-    val destClz = activities[activities.size - _step].javaClass
-    finishActivities(_step)
-    resultDispatch(targetClz, destClz)
   }
 
   private fun finishActivities(step: Int) {
-    activities.slice((activities.size - step) until activities.size)
-        .forEach {
-          it.finish()
-        }
+    val _currentIdx = currentPageIdx()
+    activities.slice((_currentIdx - step + 1)..(_currentIdx))
+      .forEach {
+        it.finish()
+      }
+  }
+
+  private fun currentPageIdx(): Int {
+    if (activity == null) {
+      return if (activities.size == 0) -1 else activities.size - 1
+    } else {
+      if (activities.size == 0) {
+        return -1
+      } else {
+        return if (activities.indexOf(
+            activity!!
+          ) == -1
+        ) activities.size - 1 else activities.indexOf(activity!!)
+      }
+    }
   }
 
   fun addDecorator(vararg decorators: SliceDecorator): SliceRouter {
@@ -210,17 +247,17 @@ class SliceRouter : FileProvider() {
   ) {
     val navigate: (RxRouter) -> Unit = { router ->
       (if (uri == null) router else router.addUri(uri))
-          .with(assembleParams())
-          .routeAction(action)
-          .subscribe({
-            if (it.resultCode == Activity.RESULT_OK) {
-              it.data.extras?.apply {
-                resolve(this)
-              }
+        .with(assembleParams())
+        .routeAction(action)
+        .subscribe({
+          if (it.resultCode == Activity.RESULT_OK) {
+            it.data.extras?.apply {
+              resolve(this)
             }
-          }, {
-            reject(it)
-          })
+          }
+        }, {
+          reject(it)
+        })
     }
     when {
       activity != null -> navigate(RxRouter.of(activity!!))
@@ -262,8 +299,8 @@ class SliceRouter : FileProvider() {
 
     val bindCallback: (LifecycleOwner, Class<*>) -> Unit = { ctx, cls ->
       onResolverAndReject(
-          { observeResult(ctx, cls, it, resolve) },
-          { observeResult(ctx, cls, it, reject) }
+        { observeResult(ctx, cls, it, resolve) },
+        { observeResult(ctx, cls, it, reject) }
       )
       clsPointExecutions[cls] = PointRunner().apply {
         scopePointRunner()
@@ -281,8 +318,8 @@ class SliceRouter : FileProvider() {
             } catch (e: RedirectException) {
               clsPointExecutions.remove(clazz)
               onResolverAndReject(
-                  { cancelObserve(ctx, clazz, it) },
-                  { cancelObserve(ctx, clazz, it) }
+                { cancelObserve(ctx, clazz, it) },
+                { cancelObserve(ctx, clazz, it) }
               )
               bindCallback(ctx, e.redirectCls)
               intent.setClass(ctx, e.redirectCls)
@@ -300,8 +337,8 @@ class SliceRouter : FileProvider() {
             } catch (e: RedirectException) {
               clsPointExecutions.remove(clazz)
               onResolverAndReject(
-                  { cancelObserve(ctx, clazz, it) },
-                  { cancelObserve(ctx, clazz, it) }
+                { cancelObserve(ctx, clazz, it) },
+                { cancelObserve(ctx, clazz, it) }
               )
               bindCallback(ctx, e.redirectCls)
               intent.setClass(ctx.context!!, e.redirectCls)
@@ -313,9 +350,30 @@ class SliceRouter : FileProvider() {
         else -> throw IllegalArgumentException("当前上下文必须是FragmentActivity或Fragment")
       }
     }
+    val navigateByContext: (Context) -> Unit = { ctx ->
+      clsPointExecutions[clazz] = PointRunner().apply {
+        scopePointRunner()
+      }
+      try {
+        val intent = Intent(ctx, clazz)
+        assembleParams(intent)
+        try {
+          decorate(intent)
+        } catch (e: RedirectException) {
+          clsPointExecutions.remove(clazz)
+          clsPointExecutions[e.redirectCls] = PointRunner().apply {
+            scopePointRunner()
+          }
+          intent.setClass(ctx, e.redirectCls)
+        }
+        ctx.startActivity(intent)
+      } catch (e: BlockException) {
+      }
+    }
     when {
       activity != null -> navigate(activity!!)
       fragment != null -> navigate(fragment!!)
+      appContext != null -> navigateByContext(appContext!!)
     }
   }
 
