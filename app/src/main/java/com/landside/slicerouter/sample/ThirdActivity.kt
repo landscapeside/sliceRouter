@@ -1,6 +1,7 @@
 package com.landside.slicerouter.sample
 
 import android.os.Bundle
+import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.landside.slicerouter.SliceRouter
@@ -23,5 +24,21 @@ class ThirdActivity : AppCompatActivity() {
           result.putString(Keys.PARAM_NAME, "from third!!")
           result
         }
+  }
+
+  fun toForth(view: View) {
+    SliceRouter.of(this).pushBySystem(
+      clazz = ForthActivity::class.java,
+      assembleParams = {
+        it.putExtra("name","from third")
+      },
+      scopePointRunner = {
+        create {
+          Toast.makeText(it,"hook create by third",Toast.LENGTH_LONG).show()
+        }
+      }
+    ){
+      Toast.makeText(this,it.getString("result"),Toast.LENGTH_LONG).show()
+    }
   }
 }

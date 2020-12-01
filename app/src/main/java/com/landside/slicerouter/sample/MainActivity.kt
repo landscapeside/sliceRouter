@@ -48,7 +48,7 @@ class MainActivity : AppCompatActivity() {
           }
     }
 
-      handler.sendEmptyMessageDelayed(1,3000)
+//      handler.sendEmptyMessageDelayed(1,3000)
   }
 
   override fun onBackPressed() {

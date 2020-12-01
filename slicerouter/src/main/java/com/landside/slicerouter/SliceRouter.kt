@@ -238,6 +238,74 @@ class SliceRouter : FileProvider() {
     return this
   }
 
+  fun pushBySystem(
+    clazz: Class<*>,
+    assembleParams: (Intent) -> Unit = {},
+    scopePointRunner: PointRunner.() -> Unit = {},
+    reject: (Throwable) -> Unit = { /*ignore*/ },
+    resolve: (Bundle) -> Unit
+  ){
+    val bindCallback: (LifecycleOwner, Class<*>) -> Unit = { ctx, cls ->
+      onResolverAndReject(
+        { observeResult(ctx, cls, it, resolve) },
+        { observeResult(ctx, cls, it, reject) }
+      )
+    }
+    val bindScopePoint : (Class<*>)->Unit = {cls->
+      clsPointExecutions[cls] = PointRunner().apply {
+        scopePointRunner()
+      }
+    }
+    val navigate: (LifecycleOwner) -> Unit = { ctx ->
+      bindCallback(ctx, InternalRouteActivity::class.java)
+      when (ctx) {
+        is Activity -> {
+          try {
+            val intent = Intent(ctx, clazz)
+            assembleParams(intent)
+            try {
+              decorate(intent)
+            } catch (e: RedirectException) {
+              clsPointExecutions.remove(clazz)
+              onResolverAndReject(
+                { cancelObserve(ctx, clazz, it) },
+                { cancelObserve(ctx, clazz, it) }
+              )
+              intent.setClass(ctx, e.redirectCls)
+            }
+            bindScopePoint(Class.forName(intent.component!!.className))
+            InternalRouteActivity.route(ctx,intent)
+          } catch (e: BlockException) {
+          }
+        }
+        is Fragment -> {
+          try {
+            val intent = Intent(ctx.context, clazz)
+            assembleParams(intent)
+            try {
+              decorate(intent)
+            } catch (e: RedirectException) {
+              clsPointExecutions.remove(clazz)
+              onResolverAndReject(
+                { cancelObserve(ctx, clazz, it) },
+                { cancelObserve(ctx, clazz, it) }
+              )
+              intent.setClass(ctx.context!!, e.redirectCls)
+            }
+            bindScopePoint(Class.forName(intent.component!!.className))
+            InternalRouteActivity.route(ctx.context!!,intent)
+          } catch (e: BlockException) {
+          }
+        }
+        else -> throw IllegalArgumentException("当前上下文必须是FragmentActivity或Fragment")
+      }
+    }
+    when {
+      activity != null -> navigate(activity!!)
+      fragment != null -> navigate(fragment!!)
+    }
+  }
+
   fun pushAction(
     action: String,
     uri: Uri? = null,

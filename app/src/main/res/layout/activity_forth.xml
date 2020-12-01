@@ -6,10 +6,9 @@
     android:layout_height="match_parent"
     tools:context=".ThirdActivity">
 
-    <Button
+    <TextView
+        android:id="@+id/tv_params"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="用系统方式打开第4页"
-        android:onClick="toForth"/>
+        android:layout_height="wrap_content" />
 
 </RelativeLayout>

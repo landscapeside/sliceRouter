@@ -1,0 +1,24 @@
+package com.landside.slicerouter.sample
+
+import android.app.Activity
+import android.content.Intent
+import android.os.Bundle
+import androidx.fragment.app.FragmentActivity
+import kotlinx.android.synthetic.main.activity_forth.*
+
+class ForthActivity : FragmentActivity() {
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_forth)
+        tv_params.text = intent.getStringExtra("name")
+    }
+
+    override fun onBackPressed() {
+//        val result = Intent()
+//        result.putExtra("result", "result from forth")
+//        setResult(Activity.RESULT_OK, result)
+        finish()
+    }
+
+}
