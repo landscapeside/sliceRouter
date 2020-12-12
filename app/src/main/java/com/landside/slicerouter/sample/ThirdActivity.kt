@@ -30,12 +30,7 @@ class ThirdActivity : AppCompatActivity() {
     SliceRouter.of(this).pushBySystem(
       clazz = ForthActivity::class.java,
       assembleParams = {
-        it.putExtra("name","from third")
-      },
-      scopePointRunner = {
-        create {
-          Toast.makeText(it,"hook create by third",Toast.LENGTH_LONG).show()
-        }
+//        it.putExtra("name","from third")
       }
     ){
       Toast.makeText(this,it.getString("result"),Toast.LENGTH_LONG).show()

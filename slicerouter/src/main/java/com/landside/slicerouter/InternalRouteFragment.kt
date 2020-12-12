@@ -67,7 +67,9 @@ internal class InternalRouteFragment : Fragment() {
     private fun realRoute(param: Intent) {
         val realIntent = Intent()
         realIntent.setClass(context!!, Class.forName(param.component?.className ?: return))
-        realIntent.putExtras(param.extras ?: return)
+        if (param.extras != null) {
+            realIntent.putExtras(param.extras!!)
+        }
         realIntent.flags = param.flags
         startActivityForResult(realIntent, InternalRouteActivity.REQUEST_ROUTE)
     }

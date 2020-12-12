@@ -11,7 +11,7 @@ class ForthActivity : FragmentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_forth)
-        tv_params.text = intent.getStringExtra("name")
+        tv_params.text = intent.getStringExtra("name")?:"没有参数"
     }
 
     override fun onBackPressed() {

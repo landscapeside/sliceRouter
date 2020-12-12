@@ -29,4 +29,8 @@ ext {
 
     rxRouter = 'zlc.season:rxrouter:1.0.1'
     rxRouterCompiler = 'zlc.season:rxrouter-compiler:1.0.1'
+
+    pandoraDebug = "com.github.whataa:pandora:v2.0.4"
+
+    okHttp = 'com.squareup.okhttp3:okhttp:3.14.0'
 }
