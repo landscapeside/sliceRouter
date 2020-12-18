@@ -47,8 +47,16 @@ dependencies {
 
     implementation rootProject.ext.liveData
 
+    implementation rootProject.ext.rxJava
+    implementation rootProject.ext.rxAndroid
     implementation rootProject.ext.rxRouter
     kapt rootProject.ext.rxRouterCompiler
+
+    implementation rootProject.ext.gson
+    implementation rootProject.ext.okHttp
+    implementation rootProject.ext.retrofit
+    implementation rootProject.ext.retrofitAdapterRxJava
+    implementation rootProject.ext.retrofitConverterGson
 
     api project(":slicerouter-annotation")
 }
