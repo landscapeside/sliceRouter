@@ -29,11 +29,9 @@ internal class InternalForbiddenDialog(
     tv_cancel.visibility = if (isForce) View.GONE else View.VISIBLE
     tv_cancel.setOnClickListener {
       skip()
-      dismiss()
     }
     tv_confirm.setOnClickListener {
       update()
-      dismiss()
     }
   }
 

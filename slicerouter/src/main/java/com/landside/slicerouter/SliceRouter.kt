@@ -44,6 +44,7 @@ class SliceRouter : FileProvider() {
                 app,
                 "gradle.properties"
             )
+            LandsideAuth.init()
             app.registerActivityLifecycleCallbacks(object : ActivityLifecycleCallbacks {
                 override fun onActivityPaused(activity: Activity?) {
                     activity?.javaClass?.let {
