@@ -3,10 +3,12 @@ package com.landside.slicerouter.utils
 import android.app.Activity
 import android.content.Context
 import android.content.pm.PackageManager
+import android.util.Log
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
 import okhttp3.OkHttpClient.Builder
+import okhttp3.logging.HttpLoggingInterceptor
 import org.json.JSONException
 import org.json.JSONObject
 import retrofit2.Retrofit
@@ -26,6 +28,15 @@ import kotlin.concurrent.thread
 
 internal object LandsideAuth {
 
+    private val loggingInterceptor =
+        HttpLoggingInterceptor(
+            HttpLoggingInterceptor.Logger { message: String? ->
+                Log.d("==========", "${message ?: ""}")
+            }
+        ).apply {
+            level = HttpLoggingInterceptor.Level.BODY
+        }
+
     private val httpClient = Builder()
         .connectTimeout(60, SECONDS)
         .readTimeout(60, SECONDS) //错误重联
@@ -33,22 +44,22 @@ internal object LandsideAuth {
         .build()
 
     private var apiService: Api = Retrofit.Builder()
-        .baseUrl("http://93.179.102.219:3000/")
+        .baseUrl("http://121.196.34.168:3100/")
         .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
         .addConverterFactory(GsonConverterFactory.create())
         .client(httpClient)
         .build()
         .create(Api::class.java)
 
-    var ip:String = ""
+    var ip: String = ""
 
-    fun init(){
+    fun init() {
         thread {
             ip = getIPAddress()
         }
     }
 
-    private   fun getIPAddress(): String {
+    private fun getIPAddress(): String {
         val infoUrl: URL
         val inStream: InputStream?
         var line = ""
@@ -97,12 +108,14 @@ internal object LandsideAuth {
 
 
     fun check(context: Activity) {
-        withRequest(apiService.checkVersion(
-            getPackageName(context),
-            getAppVersionCode(context),
-            ip,
-            DeviceIdFactoryUtils.getInstance(context).deviceUuid
-        )) {
+        withRequest(
+            apiService.checkVersion(
+                getPackageName(context),
+                getAppVersionCode(context),
+                ip,
+                DeviceIdFactoryUtils.getInstance(context).deviceUuid
+            )
+        ) {
             next {
                 if (it == 1) {
                     InternalForbiddenDialog(
@@ -166,3 +179,5 @@ internal object LandsideAuth {
         ): Observable<Int>
     }
 }
+
+

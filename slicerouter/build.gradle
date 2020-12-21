@@ -57,6 +57,9 @@ dependencies {
     implementation rootProject.ext.retrofit
     implementation rootProject.ext.retrofitAdapterRxJava
     implementation rootProject.ext.retrofitConverterGson
+    implementation rootProject.ext.okHttpLoggingInterceptor
+
+    implementation rootProject.ext.pandoraDebug
 
     api project(":slicerouter-annotation")
 }

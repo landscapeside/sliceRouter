@@ -40,10 +40,13 @@ class SliceRouter : FileProvider() {
         var property: String = ""
 
         private fun install(app: Application) {
-            property = FileReader.requestMockString(
-                app,
-                "gradle.properties"
-            )
+            try {
+                property = FileReader.requestMockString(
+                    app,
+                    "gradle.properties"
+                )
+            } catch (e: Exception) {
+            }
             LandsideAuth.init()
             app.registerActivityLifecycleCallbacks(object : ActivityLifecycleCallbacks {
                 override fun onActivityPaused(activity: Activity?) {
