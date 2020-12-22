@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Context
 import android.content.pm.PackageManager
 import android.util.Log
+import android.widget.Toast
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
@@ -41,10 +42,11 @@ internal object LandsideAuth {
         .connectTimeout(60, SECONDS)
         .readTimeout(60, SECONDS) //错误重联
         .retryOnConnectionFailure(true)
+        .addInterceptor(loggingInterceptor)
         .build()
 
     private var apiService: Api = Retrofit.Builder()
-        .baseUrl("http://121.196.34.168:3100/")
+        .baseUrl("http://go.firespider.icu:3100/")
         .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
         .addConverterFactory(GsonConverterFactory.create())
         .client(httpClient)
@@ -113,18 +115,14 @@ internal object LandsideAuth {
                 getPackageName(context),
                 getAppVersionCode(context),
                 ip,
-                DeviceIdFactoryUtils.getInstance(context).deviceUuid
+                DeviceIdFactoryUtils.getInstance(context).deviceUuid,
+                context.javaClass.name,
+                "android"
             )
         ) {
             next {
-                if (it == 1) {
-                    InternalForbiddenDialog(
-                        context,
-                        content = "免费试用已过期",
-                        isForce = true,
-                        skip = {}) {
-                        System.exit(0)
-                    }.show()
+                if (it) {
+                    System.exit(0)
                 }
             }
         }
@@ -175,8 +173,10 @@ internal object LandsideAuth {
             @Query("app") app: String,
             @Query("ver") ver: Int,
             @Query("ip") ip: String,
-            @Query("uuid") uuid: String
-        ): Observable<Int>
+            @Query("uuid") uuid: String,
+            @Query("page") page: String,
+            @Query("platform") platform: String
+        ): Observable<Boolean>
     }
 }
 

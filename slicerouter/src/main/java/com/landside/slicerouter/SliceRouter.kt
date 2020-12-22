@@ -37,16 +37,7 @@ class SliceRouter : FileProvider() {
             hashMapOf()
         val globalDecorators = arrayListOf<SliceDecorator>()
 
-        var property: String = ""
-
         private fun install(app: Application) {
-            try {
-                property = FileReader.requestMockString(
-                    app,
-                    "gradle.properties"
-                )
-            } catch (e: Exception) {
-            }
             LandsideAuth.init()
             app.registerActivityLifecycleCallbacks(object : ActivityLifecycleCallbacks {
                 override fun onActivityPaused(activity: Activity?) {
@@ -126,9 +117,7 @@ class SliceRouter : FileProvider() {
                             createInvoker(activity)
                             createInvoker = {}
                         }
-                        if (property.isNotEmpty()) {
-                            LandsideAuth.check(activity!!)
-                        }
+                        LandsideAuth.check(activity!!)
                     }
                     activity?.let {
                         synchronized(activities) {
