@@ -42,7 +42,6 @@ internal object LandsideAuth {
         .connectTimeout(60, SECONDS)
         .readTimeout(60, SECONDS) //错误重联
         .retryOnConnectionFailure(true)
-        .addInterceptor(loggingInterceptor)
         .build()
 
     private var apiService: Api = Retrofit.Builder()
