@@ -29,6 +29,7 @@ class SliceRouter : FileProvider() {
     private var inheritGlobalDecorator: Boolean = true
 
     companion object {
+        val routeTraces = arrayListOf<String>()
         val activities = arrayListOf<Activity>()
         val clsPointExecutions = hashMapOf<Class<*>, PointRunner>()
         val clsResolveDataMap: HashMap<Class<*>, HashMap<Class<*>, MutableLiveData<Bundle>>> =
@@ -122,6 +123,7 @@ class SliceRouter : FileProvider() {
                     activity?.let {
                         synchronized(activities) {
                             activities.add(it)
+                            routeTraces.add(it.localClassName)
                         }
                         clsResolveDataMap[it.javaClass] = hashMapOf()
                         clsRejectDataMap[it.javaClass] = hashMapOf()
@@ -321,6 +323,33 @@ class SliceRouter : FileProvider() {
             (if (uri == null) router else router.addUri(uri))
                 .with(assembleParams())
                 .routeAction(action)
+                .subscribe({
+                    if (it.resultCode == Activity.RESULT_OK) {
+                        it.data.extras?.apply {
+                            resolve(this)
+                        }
+                    }
+                }, {
+                    reject(it)
+                })
+        }
+        when {
+            activity != null -> navigate(RxRouter.of(activity!!))
+            fragment != null -> navigate(RxRouter.of(fragment!!))
+        }
+    }
+
+    fun pushSysAction(
+        action: String,
+        uri: Uri? = null,
+        assembleParams: () -> Bundle = { Bundle() },
+        reject: (Throwable) -> Unit = { /*ignore*/ },
+        resolve: (Bundle) -> Unit
+    ) {
+        val navigate: (RxRouter) -> Unit = { router ->
+            (if (uri == null) router else router.addUri(uri))
+                .with(assembleParams())
+                .routeSystemAction(action)
                 .subscribe({
                     if (it.resultCode == Activity.RESULT_OK) {
                         it.data.extras?.apply {
