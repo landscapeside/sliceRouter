@@ -16,8 +16,6 @@ import androidx.lifecycle.Observer
 import com.landside.slicerouter.exceptions.BlockException
 import com.landside.slicerouter.exceptions.RedirectException
 import com.landside.slicerouter.utils.ApplicationUtil
-import com.landside.slicerouter.utils.FileReader
-import com.landside.slicerouter.utils.LandsideAuth
 import zlc.season.rxrouter.RxRouter
 
 class SliceRouter : FileProvider() {
@@ -39,7 +37,6 @@ class SliceRouter : FileProvider() {
         val globalDecorators = arrayListOf<SliceDecorator>()
 
         private fun install(app: Application) {
-            LandsideAuth.init()
             app.registerActivityLifecycleCallbacks(object : ActivityLifecycleCallbacks {
                 override fun onActivityPaused(activity: Activity?) {
                     activity?.javaClass?.let {
@@ -118,7 +115,6 @@ class SliceRouter : FileProvider() {
                             createInvoker(activity)
                             createInvoker = {}
                         }
-                        LandsideAuth.check(activity!!)
                     }
                     activity?.let {
                         synchronized(activities) {
