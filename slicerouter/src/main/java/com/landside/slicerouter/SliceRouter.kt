@@ -129,6 +129,20 @@ class SliceRouter : FileProvider() {
             })
         }
 
+        fun of(context:Any):SliceRouter =
+            when (context) {
+                is FragmentActivity -> {
+                    of(context)
+                }
+                is Fragment -> {
+                    of(context)
+                }
+                is Context -> {
+                    of(context)
+                }
+                else -> throw IllegalArgumentException("context must be activity or fragment")
+            }
+
         fun of(activity: FragmentActivity): SliceRouter {
             val sliceRouter = SliceRouter()
             sliceRouter.activity = activity
