@@ -1,11 +1,12 @@
 package com.landside.slicerouter.sample
 
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.landside.slicerouter.SliceRouter
-import com.landside.slicerouter.sample.Keys
 import com.landside.slicerouter_annotation.Url
 
 @Url("test")
@@ -14,7 +15,8 @@ class ThirdActivity : AppCompatActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     setContentView(R.layout.activity_third)
-    Toast.makeText(this, intent.getStringExtra(Keys.PARAM_NAME), Toast.LENGTH_LONG).show()
+    Toast.makeText(this, intent.getStringExtra(Keys.PARAM_NAME), Toast.LENGTH_LONG)
+        .show()
   }
 
   override fun onBackPressed() {
@@ -27,13 +29,29 @@ class ThirdActivity : AppCompatActivity() {
   }
 
   fun toForth(view: View) {
-    SliceRouter.of(this).pushBySystem(
-      clazz = ForthActivity::class.java,
-      assembleParams = {
+//    SliceRouter.of(this)
+//        .pushBySystem(
+//            clazz = ForthActivity::class.java,
+//            assembleParams = {
+////        it.putExtra("name","from third")
+//            }
+//        ) {
+//          Toast.makeText(this, it.getString("result"), Toast.LENGTH_LONG)
+//              .show()
+//        }
+
+    SliceRouter.of(this)
+        .pushAction(
+            Intent.ACTION_GET_CONTENT,
+            assembleParams = {
 //        it.putExtra("name","from third")
-      }
-    ){
-      Toast.makeText(this,it.getString("result"),Toast.LENGTH_LONG).show()
-    }
+
+              it.type = "*/*"
+              it.addCategory(Intent.CATEGORY_OPENABLE)
+            }
+        ) {
+          Toast.makeText(this, it.getParcelable<Uri>(SliceRouter.BUNDLE_DATA).toString(), Toast.LENGTH_LONG)
+              .show()
+        }
   }
 }

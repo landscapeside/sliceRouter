@@ -27,12 +27,15 @@ class SliceRouter : FileProvider() {
     private var inheritGlobalDecorator: Boolean = true
 
     companion object {
+        const val BUNDLE_DATA = "BUNDLE_DATA"
+
+
         val routeTraces = arrayListOf<String>()
         val activities = arrayListOf<Activity>()
         val clsPointExecutions = hashMapOf<Class<*>, PointRunner>()
-        val clsResolveDataMap: HashMap<Class<*>, HashMap<Class<*>, MutableLiveData<Bundle>>> =
+        val clsResolveDataMap: HashMap<Class<*>, HashMap<String, MutableLiveData<Bundle>>> =
             hashMapOf()
-        val clsRejectDataMap: HashMap<Class<*>, HashMap<Class<*>, MutableLiveData<Throwable>>> =
+        val clsRejectDataMap: HashMap<Class<*>, HashMap<String, MutableLiveData<Throwable>>> =
             hashMapOf()
         val globalDecorators = arrayListOf<SliceDecorator>()
 
@@ -179,7 +182,7 @@ class SliceRouter : FileProvider() {
         resultGenerator: () -> Bundle = { Bundle() }
     ) {
         finishAndDispatch(step) { targetClz, destClz ->
-            clsResolveDataMap[targetClz]?.get(destClz)
+            clsResolveDataMap[targetClz]?.get(destClz.name)
                 ?.postValue(resultGenerator())
         }
     }
@@ -189,7 +192,7 @@ class SliceRouter : FileProvider() {
         throwable: Throwable
     ) {
         finishAndDispatch(step) { targetClz, destClz ->
-            clsRejectDataMap[targetClz]?.get(destClz)
+            clsRejectDataMap[targetClz]?.get(destClz.name)
                 ?.postValue(throwable)
         }
     }
@@ -263,8 +266,8 @@ class SliceRouter : FileProvider() {
     ) {
         val bindCallback: (LifecycleOwner, Class<*>) -> Unit = { ctx, cls ->
             onResolverAndReject(
-                { observeResult(ctx, cls, it, resolve) },
-                { observeResult(ctx, cls, it, reject) }
+                { observeResult(ctx, cls.name, it, resolve) },
+                { observeResult(ctx, cls.name, it, reject) }
             )
         }
         val bindScopePoint: (Class<*>) -> Unit = { cls ->
@@ -284,8 +287,8 @@ class SliceRouter : FileProvider() {
                         } catch (e: RedirectException) {
                             clsPointExecutions.remove(clazz)
                             onResolverAndReject(
-                                { cancelObserve(ctx, clazz, it) },
-                                { cancelObserve(ctx, clazz, it) }
+                                { cancelObserve(ctx, clazz.name, it) },
+                                { cancelObserve(ctx, clazz.name, it) }
                             )
                             intent.setClass(ctx, e.redirectCls)
                         }
@@ -303,8 +306,8 @@ class SliceRouter : FileProvider() {
                         } catch (e: RedirectException) {
                             clsPointExecutions.remove(clazz)
                             onResolverAndReject(
-                                { cancelObserve(ctx, clazz, it) },
-                                { cancelObserve(ctx, clazz, it) }
+                                { cancelObserve(ctx, clazz.name, it) },
+                                { cancelObserve(ctx, clazz.name, it) }
                             )
                             intent.setClass(ctx.context!!, e.redirectCls)
                         }
@@ -324,55 +327,61 @@ class SliceRouter : FileProvider() {
 
     fun pushAction(
         action: String,
-        uri: Uri? = null,
-        assembleParams: () -> Bundle = { Bundle() },
+        assembleParams:(Intent) -> Unit = {},
         reject: (Throwable) -> Unit = { /*ignore*/ },
         resolve: (Bundle) -> Unit
     ) {
-        val navigate: (RxRouter) -> Unit = { router ->
-            (if (uri == null) router else router.addUri(uri))
-                .with(assembleParams())
-                .routeAction(action)
-                .subscribe({
-                    if (it.resultCode == Activity.RESULT_OK) {
-                        it.data.extras?.apply {
-                            resolve(this)
+        val bindCallback: (LifecycleOwner, Class<*>) -> Unit = { ctx, cls ->
+            onResolverAndReject(
+                { observeResult(ctx, cls.name, it, resolve) },
+                { observeResult(ctx, cls.name, it, reject) }
+            )
+        }
+        val navigate: (LifecycleOwner) -> Unit = { ctx ->
+            bindCallback(ctx, InternalRouteActivity::class.java)
+            when (ctx) {
+                is Activity -> {
+                    try {
+                        val intent = Intent(action)
+                        assembleParams(intent)
+                        try {
+                            decorate(intent)
+                        } catch (e: RedirectException) {
+                            onResolverAndReject(
+                                { cancelObserve(ctx, action, it) },
+                                { cancelObserve(ctx, action, it) }
+                            )
+                            intent.setClass(ctx, e.redirectCls)
                         }
+                        InternalRouteActivity.routeAction(ctx, intent)
+                    } catch (e: BlockException) {
                     }
-                }, {
-                    reject(it)
-                })
+                }
+                is Fragment -> {
+                    try {
+                        val intent = Intent(action)
+                        assembleParams(intent)
+                        try {
+                            decorate(intent)
+                        } catch (e: RedirectException) {
+                            onResolverAndReject(
+                                { cancelObserve(ctx, action, it) },
+                                { cancelObserve(ctx, action, it) }
+                            )
+                            intent.setClass(ctx.context!!, e.redirectCls)
+                        }
+                        InternalRouteActivity.routeAction(ctx.context!!, intent)
+                    } catch (e: BlockException) {
+                    }
+                }
+                else -> throw IllegalArgumentException("当前上下文必须是FragmentActivity或Fragment")
+            }
         }
-        when {
-            activity != null -> navigate(RxRouter.of(activity!!))
-            fragment != null -> navigate(RxRouter.of(fragment!!))
-        }
-    }
 
-    fun pushSysAction(
-        action: String,
-        uri: Uri? = null,
-        assembleParams: () -> Bundle = { Bundle() },
-        reject: (Throwable) -> Unit = { /*ignore*/ },
-        resolve: (Bundle) -> Unit
-    ) {
-        val navigate: (RxRouter) -> Unit = { router ->
-            (if (uri == null) router else router.addUri(uri))
-                .with(assembleParams())
-                .routeSystemAction(action)
-                .subscribe({
-                    if (it.resultCode == Activity.RESULT_OK) {
-                        it.data.extras?.apply {
-                            resolve(this)
-                        }
-                    }
-                }, {
-                    reject(it)
-                })
-        }
+
         when {
-            activity != null -> navigate(RxRouter.of(activity!!))
-            fragment != null -> navigate(RxRouter.of(fragment!!))
+            activity != null -> navigate(activity!!)
+            fragment != null -> navigate(fragment!!)
         }
     }
 
@@ -387,8 +396,8 @@ class SliceRouter : FileProvider() {
     }
 
     private fun onResolverAndReject(
-        onResolve: (HashMap<Class<*>, MutableLiveData<Bundle>>) -> Unit,
-        onReject: (HashMap<Class<*>, MutableLiveData<Throwable>>) -> Unit
+        onResolve: (HashMap<String, MutableLiveData<Bundle>>) -> Unit,
+        onReject: (HashMap<String, MutableLiveData<Throwable>>) -> Unit
     ) {
         val currentResolves = clsResolveDataMap[activities[activities.size - 1].javaClass]
         currentResolves?.let {
@@ -410,8 +419,8 @@ class SliceRouter : FileProvider() {
 
         val bindCallback: (LifecycleOwner, Class<*>) -> Unit = { ctx, cls ->
             onResolverAndReject(
-                { observeResult(ctx, cls, it, resolve) },
-                { observeResult(ctx, cls, it, reject) }
+                { observeResult(ctx, cls.name, it, resolve) },
+                { observeResult(ctx, cls.name, it, reject) }
             )
             clsPointExecutions[cls] = PointRunner().apply {
                 scopePointRunner()
@@ -429,8 +438,8 @@ class SliceRouter : FileProvider() {
                         } catch (e: RedirectException) {
                             clsPointExecutions.remove(clazz)
                             onResolverAndReject(
-                                { cancelObserve(ctx, clazz, it) },
-                                { cancelObserve(ctx, clazz, it) }
+                                { cancelObserve(ctx, clazz.name, it) },
+                                { cancelObserve(ctx, clazz.name, it) }
                             )
                             bindCallback(ctx, e.redirectCls)
                             intent.setClass(ctx, e.redirectCls)
@@ -448,8 +457,8 @@ class SliceRouter : FileProvider() {
                         } catch (e: RedirectException) {
                             clsPointExecutions.remove(clazz)
                             onResolverAndReject(
-                                { cancelObserve(ctx, clazz, it) },
-                                { cancelObserve(ctx, clazz, it) }
+                                { cancelObserve(ctx, clazz.name, it) },
+                                { cancelObserve(ctx, clazz.name, it) }
                             )
                             bindCallback(ctx, e.redirectCls)
                             intent.setClass(ctx.context!!, e.redirectCls)
@@ -501,8 +510,8 @@ class SliceRouter : FileProvider() {
 
     private fun <T> observeResult(
         ctx: LifecycleOwner,
-        clazz: Class<*>,
-        liveDataMap: HashMap<Class<*>, MutableLiveData<T>>,
+        clazz: String,
+        liveDataMap: HashMap<String, MutableLiveData<T>>,
         callback: (T) -> Unit
     ) {
         val liveData = MutableLiveData<T>()
@@ -515,8 +524,8 @@ class SliceRouter : FileProvider() {
 
     private fun <T> cancelObserve(
         ctx: LifecycleOwner,
-        clazz: Class<*>,
-        liveDataMap: HashMap<Class<*>, MutableLiveData<T>>
+        clazz: String,
+        liveDataMap: HashMap<String, MutableLiveData<T>>
     ) {
         liveDataMap[clazz]?.removeObservers(ctx)
         liveDataMap.remove(clazz)

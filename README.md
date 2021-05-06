@@ -150,12 +150,11 @@ SliceRouter.of(this)
           .show()
     }
 ```
-* action跳转
+* action跳转，用于隐式跳转页面
 ```kotlin
 SliceRouter.of(this)
     .pushAction(
         "action name",
-        uri = null,
         /*assembleParams -- 添加入参，可为空*/
         assembleParams = {
           it.putExtra(Keys.PARAM_NAME, "第三页入参!!!")
@@ -164,8 +163,28 @@ SliceRouter.of(this)
       val name = it[Keys.PARAM_NAME]
       Toast.makeText(this, name?.toString(), Toast.LENGTH_LONG)
           .show()
+        /*如果某些页面在intent.data内返回了结果，可通过bundle.getParcelable<Uri>(SliceRouter.BUNDLE_DATA)获取*/
+      Toast.makeText(
+          this,
+          it.getParcelable<Uri>(SliceRouter.BUNDLE_DATA).toString(), Toast.LENGTH_LONG).show()
     }
 ```
+
+* 跳转第三方页面
+```kotlin
+    SliceRouter.of(this)
+        .pushBySystem(
+            clazz = ForthActivity::class.java,
+            assembleParams = {
+//        it.putExtra("name","from third")
+            }
+        ) {
+          Toast.makeText(this, it.getString("result"), Toast.LENGTH_LONG)
+              .show()
+        }
+
+```
+
 * 混淆配置
 
 ```
