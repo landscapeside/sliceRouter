@@ -28,7 +28,7 @@ class SliceRouter : FileProvider() {
 
     companion object {
         const val BUNDLE_DATA = "BUNDLE_DATA"
-
+        const val BUNDLE_RESULT_CODE = "BUNDLE_RESULT_CODE"
 
         val routeTraces = arrayListOf<String>()
         val activities = arrayListOf<Activity>()

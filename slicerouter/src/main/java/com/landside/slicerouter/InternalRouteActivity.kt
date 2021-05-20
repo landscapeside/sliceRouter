@@ -72,7 +72,10 @@ internal class InternalRouteActivity : FragmentActivity() {
     if (requestCode == REQUEST_ROUTE) {
       SliceRouter.of(this)
           .pop {
-            if (resultCode == Activity.RESULT_OK && data != null) {
+            if (resultCode != Activity.RESULT_CANCELED && data != null) {
+              data.extras?.apply {
+                putInt(SliceRouter.BUNDLE_RESULT_CODE,resultCode)
+              }
               if (isAction) {
                 return@pop data.extras?.apply {
                   putParcelable(SliceRouter.BUNDLE_DATA, data.data)
