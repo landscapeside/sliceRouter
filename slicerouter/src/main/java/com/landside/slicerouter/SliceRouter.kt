@@ -8,6 +8,7 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import androidx.core.content.FileProvider
+import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.LifecycleOwner
@@ -29,6 +30,7 @@ class SliceRouter : FileProvider() {
     companion object {
         const val BUNDLE_DATA = "BUNDLE_DATA"
         const val BUNDLE_RESULT_CODE = "BUNDLE_RESULT_CODE"
+        const val BUNDLE_NOT_EXIST = "BUNDLE_NOT_EXIST"
 
         val routeTraces = arrayListOf<String>()
         val activities = arrayListOf<Activity>()
@@ -179,11 +181,14 @@ class SliceRouter : FileProvider() {
 
     fun pop(
         step: Int = 1,
-        resultGenerator: () -> Bundle = { Bundle() }
+        resultGenerator: () -> Bundle = { bundleOf(BUNDLE_NOT_EXIST to true) }
     ) {
         finishAndDispatch(step) { targetClz, destClz ->
-            clsResolveDataMap[targetClz]?.get(destClz.name)
-                ?.postValue(resultGenerator())
+            val result = resultGenerator()
+            if (!result.getBoolean(BUNDLE_NOT_EXIST)){
+                clsResolveDataMap[targetClz]?.get(destClz.name)
+                    ?.postValue(resultGenerator())
+            }
         }
     }
 
