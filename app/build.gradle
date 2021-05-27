@@ -71,7 +71,7 @@ dependencies {
   implementation project(":slicerouter")
   kapt project(':slicerouter-compiler')
 
-  implementation rootProject.ext.pandoraDebug
+//  implementation rootProject.ext.pandoraDebug
   implementation rootProject.ext.okHttp
 
 //  implementation 'com.droidninja:filepicker:2.2.5'
