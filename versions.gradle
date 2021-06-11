@@ -40,5 +40,5 @@ ext {
     retrofitConverterGson = "com.squareup.retrofit2:converter-gson:2.0.0-beta4"
     okHttpLoggingInterceptor = "com.squareup.okhttp3:logging-interceptor:3.4.1"
     gson = "com.google.code.gson:gson:2.6.2"
-    crawler = 'com.github.landscapeside:crawler:0.0.4'
+    crawler = 'com.github.landscapeside:crawler:0.0.5'
 }
