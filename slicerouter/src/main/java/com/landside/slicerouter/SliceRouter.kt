@@ -3,7 +3,6 @@ package com.landside.slicerouter
 import android.app.Activity
 import android.app.Application
 import android.app.Application.ActivityLifecycleCallbacks
-import android.app.Fragment
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
