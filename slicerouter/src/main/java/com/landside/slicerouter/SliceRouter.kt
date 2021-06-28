@@ -3,6 +3,7 @@ package com.landside.slicerouter
 import android.app.Activity
 import android.app.Application
 import android.app.Application.ActivityLifecycleCallbacks
+import android.app.Fragment
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -222,8 +223,8 @@ class SliceRouter : FileProvider() {
                 }
                 _step = _currentIdx
             }
-            val targetClz = activities[_currentIdx - step].javaClass
-            val destClz = activities[_currentIdx - step + 1].javaClass
+            val targetClz = activities[_currentIdx - _step].javaClass
+            val destClz = activities[_currentIdx - _step + 1].javaClass
             finishActivities(_step)
             resultDispatch(targetClz, destClz)
         }
