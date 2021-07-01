@@ -31,6 +31,7 @@ class SliceRouter : FileProvider() {
         const val BUNDLE_DATA = "BUNDLE_DATA"
         const val BUNDLE_RESULT_CODE = "BUNDLE_RESULT_CODE"
         const val BUNDLE_NOT_EXIST = "BUNDLE_NOT_EXIST"
+        private const val BUNDLE_RECREATE_INDEX = "BUNDLE_RECREATE_INDEX"
 
         val routeTraces = arrayListOf<String>()
         val activities = arrayListOf<Activity>()
@@ -92,6 +93,9 @@ class SliceRouter : FileProvider() {
                     outState: Bundle?
                 ) {
                     activity?.javaClass?.let {
+                        synchronized(activities) {
+                            outState?.putInt(BUNDLE_RECREATE_INDEX, activities.indexOf(activity))
+                        }
                         clsPointExecutions[it]?.apply {
                             saveInstanceStateInvoker(
                                 activity,
@@ -123,8 +127,24 @@ class SliceRouter : FileProvider() {
                     }
                     activity?.let {
                         synchronized(activities) {
-                            activities.add(it)
-                            routeTraces.add(it.localClassName)
+                            if (savedInstanceState != null) {
+                                val insertIdx = savedInstanceState.getInt(BUNDLE_RECREATE_INDEX,-1)
+                                if (insertIdx == -1) {
+                                    activities.add(it)
+                                    routeTraces.add(it.localClassName)
+                                } else {
+                                    try {
+                                        activities.add(insertIdx,it)
+                                        routeTraces.add(insertIdx,it.localClassName)
+                                    }catch (e:IndexOutOfBoundsException){
+                                        activities.add(if (activities.size ==0) 0 else activities.size-1,it)
+                                        routeTraces.add(if (routeTraces.size ==0) 0 else routeTraces.size-1,it.localClassName)
+                                    }
+                                }
+                            } else {
+                                activities.add(it)
+                                routeTraces.add(it.localClassName)
+                            }
                         }
                         clsResolveDataMap[it.javaClass] = hashMapOf()
                         clsRejectDataMap[it.javaClass] = hashMapOf()
