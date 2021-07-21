@@ -207,7 +207,7 @@ class SliceRouter : FileProvider() {
             val result = resultGenerator()
             if (!result.getBoolean(BUNDLE_NOT_EXIST)){
                 clsResolveDataMap[targetClz]?.get(destClz.name)
-                    ?.postValue(resultGenerator())
+                    ?.postValue(result)
             }
         }
     }

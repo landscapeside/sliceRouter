@@ -31,7 +31,7 @@ class MainActivity : AppCompatActivity() {
             }
 
           })
-          .push(
+          .pushBySystem(
               SecondActivity::class.java,
               assembleParams = {
                 it.putExtra(Keys.PARAM_NAME, "to second!!!")
@@ -42,9 +42,12 @@ class MainActivity : AppCompatActivity() {
                       .show()
                 }
               }) {
-            val name = it[Keys.PARAM_NAME]
-            Toast.makeText(this, name?.toString(), Toast.LENGTH_LONG)
-                .show()
+            if (it.getInt(SliceRouter.BUNDLE_RESULT_CODE) == 3){
+              val name = it["second_result"]
+//            val name = it[Keys.PARAM_NAME]
+              Toast.makeText(this, name?.toString(), Toast.LENGTH_LONG)
+                  .show()
+            }
           }
     }
 
