@@ -61,6 +61,8 @@ dependencies {
 
 //    implementation rootProject.ext.pandoraDebug
 
+    implementation rootProject.ext.timber
+
     api project(":slicerouter-annotation")
     api rootProject.ext.crawler
 }

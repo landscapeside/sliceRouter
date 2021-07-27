@@ -74,5 +74,7 @@ dependencies {
 //  implementation rootProject.ext.pandoraDebug
   implementation rootProject.ext.okHttp
 
+  implementation rootProject.ext.timber
+
 //  implementation 'com.droidninja:filepicker:2.2.5'
 }

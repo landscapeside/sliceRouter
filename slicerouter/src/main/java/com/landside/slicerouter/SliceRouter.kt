@@ -17,7 +17,10 @@ import androidx.lifecycle.Observer
 import com.landside.slicerouter.exceptions.BlockException
 import com.landside.slicerouter.exceptions.RedirectException
 import com.landside.slicerouter.utils.ApplicationUtil
+import timber.log.Timber
 import zlc.season.rxrouter.RxRouter
+import java.lang.Exception
+import java.lang.IllegalStateException
 
 class SliceRouter : FileProvider() {
 
@@ -210,6 +213,23 @@ class SliceRouter : FileProvider() {
                     ?.postValue(result)
             }
         }
+    }
+
+    fun popToCls(
+        cls:Class<*>,
+        resultGenerator: () -> Bundle = { bundleOf(BUNDLE_NOT_EXIST to true) }
+    ){
+        val targetIdx = activities.indexOfLast { it.javaClass == cls }
+        if (targetIdx == -1) {
+            Timber.e("there is no instance with target class in page stack")
+            return
+        }
+        val step = activities.size-targetIdx-1
+        if (step <= 0) {
+            Timber.e("cannot navigate to current page")
+            return
+        }
+        pop(step, resultGenerator)
     }
 
     fun reject(

@@ -18,19 +18,19 @@ class SecondActivity : AppCompatActivity() {
   }
 
   override fun onBackPressed() {
-//    SliceRouter.of(this)
-//        .pop {
-//          val result = Bundle()
-//          result.putString(Keys.PARAM_NAME, "hahahah")
-//
-////          val result = bundleOf(Keys.PARAM_NAME to "others")
-//
-//          result
-//        }
-    val intent = Intent()
-    intent.putExtra("second_result",10)
-    setResult(3, intent)
-    finish()
+    SliceRouter.of(this)
+        .popToCls(MainActivity::class.java) {
+          val result = Bundle()
+          result.putString(Keys.PARAM_NAME, "hahahah")
+
+//          val result = bundleOf(Keys.PARAM_NAME to "others")
+
+          result
+        }
+//    val intent = Intent()
+//    intent.putExtra("second_result",10)
+//    setResult(3, intent)
+//    finish()
   }
 
   fun toThird(v: View) {

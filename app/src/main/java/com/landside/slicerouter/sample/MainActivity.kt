@@ -31,7 +31,7 @@ class MainActivity : AppCompatActivity() {
             }
 
           })
-          .pushBySystem(
+          .push(
               SecondActivity::class.java,
               assembleParams = {
                 it.putExtra(Keys.PARAM_NAME, "to second!!!")
