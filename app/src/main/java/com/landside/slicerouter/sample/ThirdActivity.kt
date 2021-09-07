@@ -1,7 +1,5 @@
 package com.landside.slicerouter.sample
 
-import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
 import android.view.View
 import android.widget.Toast
@@ -29,29 +27,30 @@ class ThirdActivity : AppCompatActivity() {
   }
 
   fun toForth(view: View) {
-//    SliceRouter.of(this)
-//        .pushBySystem(
-//            clazz = ForthActivity::class.java,
-//            assembleParams = {
-////        it.putExtra("name","from third")
-//            }
-//        ) {
-//          Toast.makeText(this, it.getString("result"), Toast.LENGTH_LONG)
-//              .show()
-//        }
-
     SliceRouter.of(this)
-        .pushAction(
-            Intent.ACTION_GET_CONTENT,
+        .pushBySystem(
+            clazz = ForthActivity::class.java,
             assembleParams = {
-//        it.putExtra("name","from third")
-
-              it.type = "*/*"
-              it.addCategory(Intent.CATEGORY_OPENABLE)
+//              it.putExtra("name","from third")
+              it.putExtra("name", SomeObj("kite"))
             }
         ) {
-          Toast.makeText(this, it.getParcelable<Uri>(SliceRouter.BUNDLE_DATA).toString(), Toast.LENGTH_LONG)
+          Toast.makeText(this, it.getString("result"), Toast.LENGTH_LONG)
               .show()
         }
+
+//    SliceRouter.of(this)
+//        .pushAction(
+//            Intent.ACTION_GET_CONTENT,
+//            assembleParams = {
+////        it.putExtra("name","from third")
+//
+//              it.type = "*/*"
+//              it.addCategory(Intent.CATEGORY_OPENABLE)
+//            }
+//        ) {
+//          Toast.makeText(this, it.getParcelable<Uri>(SliceRouter.BUNDLE_DATA).toString(), Toast.LENGTH_LONG)
+//              .show()
+//        }
   }
 }

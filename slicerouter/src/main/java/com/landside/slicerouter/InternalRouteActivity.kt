@@ -14,6 +14,8 @@ internal class InternalRouteActivity : FragmentActivity() {
     const val IN_DATAGRAM = "slicerouter.datagram"
     const val IS_ACTION = "slicerouter.isaction"
 
+    var param:Intent? = null
+
     fun route(
       context: Context,
       param: Intent
@@ -21,6 +23,7 @@ internal class InternalRouteActivity : FragmentActivity() {
       val intent = Intent(context, InternalRouteActivity::class.java)
       intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
       intent.putExtra(IN_DATAGRAM, param)
+      this.param = param
       context.startActivity(intent)
     }
 
@@ -32,6 +35,7 @@ internal class InternalRouteActivity : FragmentActivity() {
       intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
       intent.putExtra(IN_DATAGRAM, param)
       intent.putExtra(IS_ACTION, true)
+      this.param = param
       context.startActivity(intent)
     }
   }
@@ -40,14 +44,13 @@ internal class InternalRouteActivity : FragmentActivity() {
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    val param = intent.getParcelableExtra<Intent>(IN_DATAGRAM)
     isAction = intent.getBooleanExtra(IS_ACTION, false)
     param?.let {
       val realIntent = Intent()
       if (isAction) {
-        realIntent.action = param.action
+        realIntent.action = it.action
       } else {
-        realIntent.setClass(this, Class.forName(param.component?.className ?: return))
+        realIntent.setClass(this, Class.forName(it.component?.className ?: return))
       }
       if (it.extras != null) {
         realIntent.putExtras(it.extras!!)
@@ -57,7 +60,7 @@ internal class InternalRouteActivity : FragmentActivity() {
       it.categories?.forEach {
         realIntent.addCategory(it)
       }
-      realIntent.flags = param.flags
+      realIntent.flags = it.flags
       startActivityForResult(realIntent, REQUEST_ROUTE)
     }
 

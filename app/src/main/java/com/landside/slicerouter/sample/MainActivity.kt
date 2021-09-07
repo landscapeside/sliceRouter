@@ -8,7 +8,9 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.landside.slicerouter.SliceDecorator
 import com.landside.slicerouter.SliceRouter
+import kotlinx.android.synthetic.main.activity_main.et_test
 import kotlinx.android.synthetic.main.activity_main.to_second
+import timber.log.Timber
 
 class MainActivity : AppCompatActivity() {
 
@@ -49,6 +51,10 @@ class MainActivity : AppCompatActivity() {
                   .show()
             }
           }
+    }
+
+    et_test.setOnFocusChangeListener { v, hasFocus ->
+      Timber.d("输入框${v}焦点状态：${hasFocus}")
     }
 
 //      handler.sendEmptyMessageDelayed(1,3000)
