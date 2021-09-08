@@ -76,13 +76,14 @@ internal class InternalRouteFragment : Fragment() {
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == InternalRouteActivity.REQUEST_ROUTE && resultCode == Activity.RESULT_OK) {
-            SliceRouter.of(this).pop {
-                if (data == null) {
-                    return@pop Bundle()
+
+        if (requestCode == InternalRouteActivity.REQUEST_ROUTE) {
+            SliceRouter.of(this)
+                .pop {
+                    val resultData = data?.extras?.clone() as? Bundle?: Bundle()
+                    resultData.putInt(SliceRouter.BUNDLE_RESULT_CODE,resultCode)
+                    return@pop resultData
                 }
-                return@pop data.extras!!
-            }
         }
     }
 

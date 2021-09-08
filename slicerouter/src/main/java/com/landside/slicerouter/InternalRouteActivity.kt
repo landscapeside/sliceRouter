@@ -75,20 +75,18 @@ internal class InternalRouteActivity : FragmentActivity() {
     if (requestCode == REQUEST_ROUTE) {
       SliceRouter.of(this)
           .pop {
+            val resultData = data?.extras?.clone() as? Bundle?: Bundle()
+            resultData.putInt(SliceRouter.BUNDLE_RESULT_CODE,resultCode)
             if (resultCode != Activity.RESULT_CANCELED && data != null) {
-              val realData = data.extras?.clone() as? Bundle
-              realData?.putInt(SliceRouter.BUNDLE_RESULT_CODE,resultCode)
               if (isAction) {
-                return@pop realData?.apply {
+                return@pop resultData.apply {
                   putParcelable(SliceRouter.BUNDLE_DATA, data.data)
-                } ?: bundleOf(
-                    SliceRouter.BUNDLE_DATA to data.data
-                )
+                }
               } else {
-                return@pop realData ?: Bundle()
+                return@pop resultData
               }
             } else {
-              return@pop Bundle()
+              return@pop resultData
             }
           }
     }
