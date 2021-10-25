@@ -444,6 +444,9 @@ class SliceRouter : FileProvider() {
         onResolve: (HashMap<String, MutableLiveData<Bundle>>) -> Unit,
         onReject: (HashMap<String, MutableLiveData<Throwable>>) -> Unit
     ) {
+        if (activities.isEmpty()) {
+            return
+        }
         val currentResolves = clsResolveDataMap[activities[activities.size - 1].javaClass]
         currentResolves?.let {
             onResolve(it)
