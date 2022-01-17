@@ -75,6 +75,9 @@ dependencies {
   implementation rootProject.ext.okHttp
 
   implementation rootProject.ext.timber
+  implementation rootProject.ext.rxPermissions
+  implementation rootProject.ext.rxJava
+  implementation rootProject.ext.rxAndroid
 
 //  implementation 'com.droidninja:filepicker:2.2.5'
 }

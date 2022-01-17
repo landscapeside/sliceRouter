@@ -21,6 +21,7 @@ import timber.log.Timber
 import zlc.season.rxrouter.RxRouter
 import java.lang.Exception
 import java.lang.IllegalStateException
+import java.util.*
 
 class SliceRouter : FileProvider() {
 
@@ -47,8 +48,8 @@ class SliceRouter : FileProvider() {
 
         private fun install(app: Application) {
             app.registerActivityLifecycleCallbacks(object : ActivityLifecycleCallbacks {
-                override fun onActivityPaused(activity: Activity?) {
-                    activity?.javaClass?.let {
+                override fun onActivityPaused(activity: Activity) {
+                    activity.javaClass.let {
                         clsPointExecutions[it]?.apply {
                             pauseInvoker(activity)
                             pauseInvoker = {}
@@ -56,8 +57,8 @@ class SliceRouter : FileProvider() {
                     }
                 }
 
-                override fun onActivityResumed(activity: Activity?) {
-                    activity?.javaClass?.let {
+                override fun onActivityResumed(activity: Activity) {
+                    activity.javaClass.let {
                         clsPointExecutions[it]?.apply {
                             resumeInvoker(activity)
                             resumeInvoker = {}
@@ -65,8 +66,8 @@ class SliceRouter : FileProvider() {
                     }
                 }
 
-                override fun onActivityStarted(activity: Activity?) {
-                    activity?.javaClass?.let {
+                override fun onActivityStarted(activity: Activity) {
+                    activity.javaClass.let {
                         clsPointExecutions[it]?.apply {
                             startInvoker(activity)
                             startInvoker = {}
@@ -74,14 +75,14 @@ class SliceRouter : FileProvider() {
                     }
                 }
 
-                override fun onActivityDestroyed(activity: Activity?) {
-                    activity?.javaClass?.let {
+                override fun onActivityDestroyed(activity: Activity) {
+                    activity.javaClass.let {
                         clsPointExecutions[it]?.apply {
                             destroyInvoker(activity)
                             destroyInvoker = {}
                         }
                     }
-                    activity?.let {
+                    activity.let {
                         synchronized(activities) {
                             activities.remove(it)
                         }
@@ -92,12 +93,12 @@ class SliceRouter : FileProvider() {
                 }
 
                 override fun onActivitySaveInstanceState(
-                    activity: Activity?,
-                    outState: Bundle?
+                    activity: Activity,
+                    outState: Bundle
                 ) {
-                    activity?.javaClass?.let {
+                    activity.javaClass.let {
                         synchronized(activities) {
-                            outState?.putInt(BUNDLE_RECREATE_INDEX, activities.indexOf(activity))
+                            outState.putInt(BUNDLE_RECREATE_INDEX, activities.indexOf(activity))
                         }
                         clsPointExecutions[it]?.apply {
                             saveInstanceStateInvoker(
@@ -109,8 +110,8 @@ class SliceRouter : FileProvider() {
                     }
                 }
 
-                override fun onActivityStopped(activity: Activity?) {
-                    activity?.javaClass?.let {
+                override fun onActivityStopped(activity: Activity) {
+                    activity.javaClass.let {
                         clsPointExecutions[it]?.apply {
                             stopInvoker(activity)
                             stopInvoker = {}
@@ -119,16 +120,16 @@ class SliceRouter : FileProvider() {
                 }
 
                 override fun onActivityCreated(
-                    activity: Activity?,
+                    activity: Activity,
                     savedInstanceState: Bundle?
                 ) {
-                    activity?.javaClass?.let {
+                    activity.javaClass.let {
                         clsPointExecutions[it]?.apply {
                             createInvoker(activity)
                             createInvoker = {}
                         }
                     }
-                    activity?.let {
+                    activity.let {
                         synchronized(activities) {
                             if (savedInstanceState != null) {
                                 val insertIdx = savedInstanceState.getInt(BUNDLE_RECREATE_INDEX,-1)
@@ -279,7 +280,20 @@ class SliceRouter : FileProvider() {
 
     private fun currentPageIdx(): Int {
         if (activity == null) {
-            return if (activities.size == 0) -1 else activities.size - 1
+            if (fragment != null) {
+                if (activities.size == 0) {
+                    return -1
+                } else {
+                    return if (activities.indexOf(
+                            fragment!!.requireActivity()
+                        ) == -1
+                    ) {
+                        activities.size - 1
+                    } else activities.indexOf(fragment!!.requireActivity())
+                }
+            } else {
+                return if (activities.size == 0) -1 else activities.size - 1
+            }
         } else {
             if (activities.size == 0) {
                 return -1
@@ -287,7 +301,9 @@ class SliceRouter : FileProvider() {
                 return if (activities.indexOf(
                         activity!!
                     ) == -1
-                ) activities.size - 1 else activities.indexOf(activity!!)
+                ) {
+                    activities.size - 1
+                } else activities.indexOf(activity!!)
             }
         }
     }
@@ -447,11 +463,11 @@ class SliceRouter : FileProvider() {
         if (activities.isEmpty()) {
             return
         }
-        val currentResolves = clsResolveDataMap[activities[activities.size - 1].javaClass]
+        val currentResolves = clsResolveDataMap[activities[currentPageIdx()].javaClass]
         currentResolves?.let {
             onResolve(it)
         }
-        val currentRejects = clsRejectDataMap[activities[activities.size - 1].javaClass]
+        val currentRejects = clsRejectDataMap[activities[currentPageIdx()].javaClass]
         currentRejects?.let {
             onReject(it)
         }
