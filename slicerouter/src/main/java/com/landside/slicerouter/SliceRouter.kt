@@ -132,17 +132,23 @@ class SliceRouter : FileProvider() {
                     activity.let {
                         synchronized(activities) {
                             if (savedInstanceState != null) {
-                                val insertIdx = savedInstanceState.getInt(BUNDLE_RECREATE_INDEX,-1)
+                                val insertIdx = savedInstanceState.getInt(BUNDLE_RECREATE_INDEX, -1)
                                 if (insertIdx == -1) {
                                     activities.add(it)
                                     routeTraces.add(it.localClassName)
                                 } else {
                                     try {
-                                        activities.add(insertIdx,it)
-                                        routeTraces.add(insertIdx,it.localClassName)
-                                    }catch (e:IndexOutOfBoundsException){
-                                        activities.add(if (activities.size ==0) 0 else activities.size-1,it)
-                                        routeTraces.add(if (routeTraces.size ==0) 0 else routeTraces.size-1,it.localClassName)
+                                        activities.add(insertIdx, it)
+                                        routeTraces.add(insertIdx, it.localClassName)
+                                    } catch (e: IndexOutOfBoundsException) {
+                                        activities.add(
+                                            if (activities.size == 0) 0 else activities.size - 1,
+                                            it
+                                        )
+                                        routeTraces.add(
+                                            if (routeTraces.size == 0) 0 else routeTraces.size - 1,
+                                            it.localClassName
+                                        )
                                     }
                                 }
                             } else {
@@ -158,7 +164,7 @@ class SliceRouter : FileProvider() {
             })
         }
 
-        fun of(context:Any):SliceRouter =
+        fun of(context: Any): SliceRouter =
             when (context) {
                 is FragmentActivity -> {
                     of(context)
@@ -209,7 +215,7 @@ class SliceRouter : FileProvider() {
     ) {
         finishAndDispatch(step) { targetClz, destClz ->
             val result = resultGenerator()
-            if (!result.getBoolean(BUNDLE_NOT_EXIST)){
+            if (!result.getBoolean(BUNDLE_NOT_EXIST)) {
                 clsResolveDataMap[targetClz]?.get(destClz.name)
                     ?.postValue(result)
             }
@@ -217,15 +223,15 @@ class SliceRouter : FileProvider() {
     }
 
     fun popToCls(
-        cls:Class<*>,
+        cls: Class<*>,
         resultGenerator: () -> Bundle = { bundleOf(BUNDLE_NOT_EXIST to true) }
-    ){
+    ) {
         val targetIdx = activities.indexOfLast { it.javaClass == cls }
         if (targetIdx == -1) {
             Timber.e("there is no instance with target class in page stack")
             return
         }
-        val step = activities.size-targetIdx-1
+        val step = activities.size - targetIdx - 1
         if (step <= 0) {
             Timber.e("cannot navigate to current page")
             return
@@ -386,9 +392,99 @@ class SliceRouter : FileProvider() {
         }
     }
 
+    fun pushIntent(
+        intent: Intent,
+        assembleParams: (Intent) -> Unit = {},
+        scopePointRunner: PointRunner.() -> Unit = {},
+        reject: (Throwable) -> Unit = { /*ignore*/ },
+        resolve: (Bundle) -> Unit
+    ) {
+        val bindCallback: (LifecycleOwner, Class<*>) -> Unit = { ctx, cls ->
+            onResolverAndReject(
+                { observeResult(ctx, cls.name, it, resolve) },
+                { observeResult(ctx, cls.name, it, reject) }
+            )
+        }
+        val bindScopePoint: (Class<*>) -> Unit = { cls ->
+            clsPointExecutions[cls] = PointRunner().apply {
+                scopePointRunner()
+            }
+        }
+        val navigate: (LifecycleOwner) -> Unit = { ctx ->
+            bindCallback(ctx, InternalRouteActivity::class.java)
+            when (ctx) {
+                is Activity -> {
+                    try {
+                        assembleParams(intent)
+                        try {
+                            decorate(intent)
+                        } catch (e: RedirectException) {
+                            clsPointExecutions.remove(Class.forName(intent.component!!.className))
+                            onResolverAndReject(
+                                {
+                                    cancelObserve(
+                                        ctx,
+                                        Class.forName(intent.component!!.className).name,
+                                        it
+                                    )
+                                },
+                                {
+                                    cancelObserve(
+                                        ctx,
+                                        Class.forName(intent.component!!.className).name,
+                                        it
+                                    )
+                                }
+                            )
+                            intent.setClass(ctx, e.redirectCls)
+                        }
+                        bindScopePoint(Class.forName(intent.component!!.className))
+                        InternalRouteActivity.route(ctx, intent)
+                    } catch (e: BlockException) {
+                    }
+                }
+                is Fragment -> {
+                    try {
+                        assembleParams(intent)
+                        try {
+                            decorate(intent)
+                        } catch (e: RedirectException) {
+                            clsPointExecutions.remove(Class.forName(intent.component!!.className))
+                            onResolverAndReject(
+                                {
+                                    cancelObserve(
+                                        ctx,
+                                        Class.forName(intent.component!!.className).name,
+                                        it
+                                    )
+                                },
+                                {
+                                    cancelObserve(
+                                        ctx,
+                                        Class.forName(intent.component!!.className).name,
+                                        it
+                                    )
+                                }
+                            )
+                            intent.setClass(ctx.context!!, e.redirectCls)
+                        }
+                        bindScopePoint(Class.forName(intent.component!!.className))
+                        InternalRouteActivity.route(ctx.context!!, intent)
+                    } catch (e: BlockException) {
+                    }
+                }
+                else -> throw IllegalArgumentException("当前上下文必须是FragmentActivity或Fragment")
+            }
+        }
+        when {
+            activity != null -> navigate(activity!!)
+            fragment != null -> navigate(fragment!!)
+        }
+    }
+
     fun pushAction(
         action: String,
-        assembleParams:(Intent) -> Unit = {},
+        assembleParams: (Intent) -> Unit = {},
         reject: (Throwable) -> Unit = { /*ignore*/ },
         resolve: (Bundle) -> Unit
     ) {
