@@ -25,11 +25,15 @@ import java.util.*
 
 class SliceRouter : FileProvider() {
 
-    private var activity: FragmentActivity? = null
-    private var fragment: Fragment? = null
     private var appContext: Context? = null
+    private var lifecycleOwner:LifecycleOwner? = null
+    private var contextType = ContextType.NONE
     private val decorators = arrayListOf<SliceDecorator>()
     private var inheritGlobalDecorator: Boolean = true
+
+    enum class ContextType{
+        ACTIVITY,FRAGMENT,CONTEXT,NONE
+    }
 
     companion object {
         const val BUNDLE_DATA = "BUNDLE_DATA"
@@ -166,34 +170,52 @@ class SliceRouter : FileProvider() {
 
         fun of(context: Any): SliceRouter =
             when (context) {
-                is FragmentActivity -> {
-                    of(context)
+                is Activity -> {
+                    if (context !is LifecycleOwner){
+                        throw IllegalArgumentException("context must inherit from LifecycleOwner")
+                    }
+                    SliceRouter().apply {
+                        contextType = ContextType.ACTIVITY
+                        lifecycleOwner = context
+                    }
                 }
                 is Fragment -> {
-                    of(context)
+                    SliceRouter().apply {
+                        contextType = ContextType.FRAGMENT
+                        lifecycleOwner = context
+                    }
                 }
                 is Context -> {
-                    of(context)
+                    SliceRouter().apply {
+                        contextType = ContextType.CONTEXT
+                        appContext = context
+                    }
                 }
                 else -> throw IllegalArgumentException("context must be activity or fragment")
             }
 
-        fun of(activity: FragmentActivity): SliceRouter {
-            val sliceRouter = SliceRouter()
-            sliceRouter.activity = activity
-            return sliceRouter
+        fun of(activity: Activity): SliceRouter {
+            if (activity !is LifecycleOwner){
+                throw IllegalArgumentException("context must inherit from LifecycleOwner")
+            }
+            return SliceRouter().apply {
+                contextType = ContextType.ACTIVITY
+                lifecycleOwner = activity
+            }
         }
 
         fun of(fragment: Fragment): SliceRouter {
-            val sliceRouter = SliceRouter()
-            sliceRouter.fragment = fragment
-            return sliceRouter
+            return SliceRouter().apply {
+                contextType = ContextType.FRAGMENT
+                lifecycleOwner = fragment
+            }
         }
 
         fun of(context: Context): SliceRouter {
-            val sliceRouter = SliceRouter()
-            sliceRouter.appContext = context
-            return sliceRouter
+            return SliceRouter().apply {
+                contextType = ContextType.CONTEXT
+                appContext = context
+            }
         }
 
         fun addDecorator(vararg decorators: SliceDecorator) {
@@ -285,31 +307,36 @@ class SliceRouter : FileProvider() {
     }
 
     private fun currentPageIdx(): Int {
-        if (activity == null) {
-            if (fragment != null) {
+        when(contextType){
+            ContextType.FRAGMENT->{
                 if (activities.size == 0) {
                     return -1
                 } else {
                     return if (activities.indexOf(
-                            fragment!!.requireActivity()
+                            (lifecycleOwner as Fragment).requireActivity()
                         ) == -1
                     ) {
                         activities.size - 1
-                    } else activities.indexOf(fragment!!.requireActivity())
+                    } else activities.indexOf((lifecycleOwner as Fragment).requireActivity())
                 }
-            } else {
+            }
+            ContextType.ACTIVITY->{
+                if (activities.size == 0) {
+                    return -1
+                } else {
+                    return if (activities.indexOf(
+                            lifecycleOwner as Activity
+                        ) == -1
+                    ) {
+                        activities.size - 1
+                    } else activities.indexOf(lifecycleOwner as Activity)
+                }
+            }
+            ContextType.CONTEXT->{
                 return if (activities.size == 0) -1 else activities.size - 1
             }
-        } else {
-            if (activities.size == 0) {
-                return -1
-            } else {
-                return if (activities.indexOf(
-                        activity!!
-                    ) == -1
-                ) {
-                    activities.size - 1
-                } else activities.indexOf(activity!!)
+            else->{
+                throw IllegalStateException("context is not activity or fragment or context")
             }
         }
     }
@@ -386,9 +413,10 @@ class SliceRouter : FileProvider() {
                 else -> throw IllegalArgumentException("当前上下文必须是FragmentActivity或Fragment")
             }
         }
-        when {
-            activity != null -> navigate(activity!!)
-            fragment != null -> navigate(fragment!!)
+        when(contextType){
+            ContextType.ACTIVITY,ContextType.FRAGMENT->{
+                navigate(lifecycleOwner!!)
+            }
         }
     }
 
@@ -476,9 +504,10 @@ class SliceRouter : FileProvider() {
                 else -> throw IllegalArgumentException("当前上下文必须是FragmentActivity或Fragment")
             }
         }
-        when {
-            activity != null -> navigate(activity!!)
-            fragment != null -> navigate(fragment!!)
+        when(contextType){
+            ContextType.ACTIVITY,ContextType.FRAGMENT->{
+                navigate(lifecycleOwner!!)
+            }
         }
     }
 
@@ -534,11 +563,10 @@ class SliceRouter : FileProvider() {
                 else -> throw IllegalArgumentException("当前上下文必须是FragmentActivity或Fragment")
             }
         }
-
-
-        when {
-            activity != null -> navigate(activity!!)
-            fragment != null -> navigate(fragment!!)
+        when(contextType){
+            ContextType.ACTIVITY,ContextType.FRAGMENT->{
+                navigate(lifecycleOwner!!)
+            }
         }
     }
 
@@ -650,10 +678,13 @@ class SliceRouter : FileProvider() {
             } catch (e: BlockException) {
             }
         }
-        when {
-            activity != null -> navigate(activity!!)
-            fragment != null -> navigate(fragment!!)
-            appContext != null -> navigateByContext(appContext!!)
+        when(contextType){
+            ContextType.ACTIVITY,ContextType.FRAGMENT->{
+                navigate(lifecycleOwner!!)
+            }
+            ContextType.CONTEXT->{
+                navigateByContext(appContext!!)
+            }
         }
     }
 
