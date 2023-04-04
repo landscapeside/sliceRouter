@@ -53,8 +53,6 @@ dependencies {
 
     implementation rootProject.ext.rxJava
     implementation rootProject.ext.rxAndroid
-    implementation rootProject.ext.rxRouter
-    kapt rootProject.ext.rxRouterCompiler
 
     implementation rootProject.ext.gson
     implementation rootProject.ext.okHttp

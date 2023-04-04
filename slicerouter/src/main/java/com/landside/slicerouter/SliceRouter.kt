@@ -10,7 +10,6 @@ import android.os.Bundle
 import androidx.core.content.FileProvider
 import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
@@ -18,8 +17,6 @@ import com.landside.slicerouter.exceptions.BlockException
 import com.landside.slicerouter.exceptions.RedirectException
 import com.landside.slicerouter.utils.ApplicationUtil
 import timber.log.Timber
-import zlc.season.rxrouter.RxRouter
-import java.lang.Exception
 import java.lang.IllegalStateException
 import java.util.*
 
